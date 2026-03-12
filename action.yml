@@ -72,10 +72,19 @@ runs:
         INSTALL_DIR="$HOME/.ym/bin"
         mkdir -p "$INSTALL_DIR"
 
-        # Skip download if cached
+        # Skip download if binary exists and runs correctly
+        NEED_DOWNLOAD=true
         if [ -f "$INSTALL_DIR/ym" ] || [ -f "$INSTALL_DIR/ym.exe" ]; then
-          echo "ym v${VERSION} already installed (cached)"
-        else
+          if "$INSTALL_DIR/ym" --version >/dev/null 2>&1; then
+            echo "ym v${VERSION} already installed (cached)"
+            NEED_DOWNLOAD=false
+          else
+            echo "Existing ym binary is broken, re-downloading..."
+            rm -f "$INSTALL_DIR/ym" "$INSTALL_DIR/ymc" "$INSTALL_DIR/ym.exe" "$INSTALL_DIR/ymc.exe"
+          fi
+        fi
+
+        if [ "$NEED_DOWNLOAD" = "true" ]; then
           URL="https://github.com/ympkg/yummy/releases/download/v${VERSION}/ym-${VERSION}-${TARGET}.${EXT}"
           echo "Downloading ym v${VERSION} for ${TARGET}..."
           curl -fsSL "$URL" -o "ym-archive.${EXT}"
@@ -98,7 +107,7 @@ runs:
 
           rm -rf "ym-archive.${EXT}" "ym-${VERSION}-${TARGET}"
           echo "ym v${VERSION} installed to ${INSTALL_DIR}"
-        fi
+        fi  # NEED_DOWNLOAD
 
         echo "$INSTALL_DIR" >> "$GITHUB_PATH"
         echo "version=$VERSION" >> "$GITHUB_OUTPUT"
