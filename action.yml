@@ -72,14 +72,15 @@ runs:
         INSTALL_DIR="$HOME/.ym/bin"
         mkdir -p "$INSTALL_DIR"
 
-        # Skip download if binary exists and runs correctly
+        # Skip download if binary exists, runs correctly, AND matches requested version
         NEED_DOWNLOAD=true
         if [ -f "$INSTALL_DIR/ym" ] || [ -f "$INSTALL_DIR/ym.exe" ]; then
-          if "$INSTALL_DIR/ym" --version >/dev/null 2>&1; then
+          INSTALLED=$("$INSTALL_DIR/ym" --version 2>/dev/null | awk '{print $2}' || echo "")
+          if [ "$INSTALLED" = "$VERSION" ]; then
             echo "ym v${VERSION} already installed (cached)"
             NEED_DOWNLOAD=false
           else
-            echo "Existing ym binary is broken, re-downloading..."
+            echo "Version mismatch: installed=${INSTALLED:-broken}, requested=${VERSION}. Re-downloading..."
             rm -f "$INSTALL_DIR/ym" "$INSTALL_DIR/ymc" "$INSTALL_DIR/ym.exe" "$INSTALL_DIR/ymc.exe"
           fi
         fi
