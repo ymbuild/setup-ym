@@ -48,10 +48,14 @@ runs:
       shell: bash
       run: |
         VERSION="${{ inputs.version }}"
+        CURL_OPTS="-fsSL"
+        if [ -n "$GITHUB_TOKEN" ]; then
+          CURL_OPTS="$CURL_OPTS -H \"Authorization: Bearer $GITHUB_TOKEN\""
+        fi
         if [ "$VERSION" = "latest" ]; then
-          VERSION=$(curl -fsSL https://api.github.com/repos/ympkg/yummy/releases/latest | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')
+          VERSION=$(eval curl $CURL_OPTS https://api.github.com/repos/ympkg/yummy/releases/latest | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')
         elif [ "$VERSION" = "dev" ]; then
-          VERSION=$(curl -fsSL "https://api.github.com/repos/ympkg/yummy/releases?per_page=20" | grep '"tag_name".*dev' | head -1 | sed 's/.*"v\(.*\)".*/\1/')
+          VERSION=$(eval curl $CURL_OPTS "https://api.github.com/repos/ympkg/yummy/releases?per_page=20" | grep '"tag_name".*dev' | head -1 | sed 's/.*"v\(.*\)".*/\1/')
         fi
         echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
